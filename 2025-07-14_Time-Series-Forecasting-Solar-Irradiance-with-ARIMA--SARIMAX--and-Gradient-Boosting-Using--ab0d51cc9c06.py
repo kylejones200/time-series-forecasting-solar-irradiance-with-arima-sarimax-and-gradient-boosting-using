@@ -19,7 +19,7 @@ df.set_index("timestamp", inplace=True)
 
 column_map = {
     "Global Horizontal Irradiance (GHI) W/m2": "GHI",
-    ...
+    # ...
 }
 df = df[column_map.keys()].rename(columns=column_map)
 df = df.apply(pd.to_numeric, errors="coerce")
