@@ -8,6 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+import signalplot
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,12 +33,7 @@ results = pd.DataFrame({
 })
 
 
-plt.rcParams.update({
-    'axes.grid': False,
-    "font.family": "serif",
-    "axes.spines.top": False,
-    "axes.spines.right": False
-})
+signalplot.apply(font_family='serif')
 
 # Load and preprocess data
 df = read_csv(
