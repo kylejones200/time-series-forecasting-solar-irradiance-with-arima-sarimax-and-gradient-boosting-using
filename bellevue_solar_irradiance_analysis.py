@@ -79,7 +79,11 @@ def smape(y_true, y_pred):
     return 100 * np.mean(2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred)))
 
 
-def main() -> None:
+def notebook_step_001() -> None:
+    'Generated from Jupyter notebook: bellevue_solar_irradiance_analysis\n\nMagics and shell lines are commented out. Run with a normal Python interpreter.'
+
+
+def load_the_re_uploaded_dataset_skipping_the_first() -> None:
     file_path = 'Bellevue SolarAnywhere Time Series 20230101 to 20240101 Lat_47_615 Lon_-122_175 SA format.csv'
 
     df = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
@@ -102,6 +106,8 @@ def main() -> None:
 
     metrics_df, full_forecast_df = run_forecasting_pipeline(df, exog_columns)
 
+
+def reload_the_dataset_with_the_correct_header_at_ro() -> None:
     df_named = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
 
     df_named.rename(columns={'ObservationTime(LST)': 'timestamp'}, inplace=True)
@@ -118,6 +124,8 @@ def main() -> None:
 
     df_selected_named = df_selected_named.apply(pd.to_numeric, errors='coerce')
 
+
+def include_exogenous_variables_temperature_humidity() -> None:
     from statsmodels.tsa.statespace.sarimax import SARIMAX
 
     # Include exogenous variables: temperature, humidity, and wind speed
@@ -274,7 +282,7 @@ def main() -> None:
     # Fit Gradient Boosting Regressor
     bgt_model = GradientBoostingRegressor()
     bgt_model.fit(X_train, y_train)
-    bgt_preds = bgt_model.predict(X_test) a
+    bgt_preds = bgt_model.predict(X_test)
     bgt_rmse = mean_squared_error(y_test, bgt_preds, squared=False)
 
     # Prepare data for LSTM: [samples, time steps, features]
@@ -408,8 +416,7 @@ def main() -> None:
     exog_columns = ["Temperature", "Humidity", "Wind Speed"]
     metrics_df, full_forecast_df = run_forecasting_pipeline(df_selected_named, exog_columns)
 
-     # Re-
-    import necessary modules after code execution state reset
+    # Re-import necessary modules after code execution state reset
     import pandas as pd
     import numpy as np
     from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -734,6 +741,8 @@ def main() -> None:
     forecast_df.to_csv("solar_forecast_results.csv", index=False)
     metrics_df.to_csv("solar_model_metrics.csv", index=False)
 
+
+def helpers() -> None:
     df = pd.read_csv('Bellevue SolarAnywhere Time Series 20230101 to 20240101 Lat_47_615 Lon_-122_175 SA format.csv', encoding='ISO-8859-1', skiprows=1)
 
     df.rename(columns={'ObservationTime(LST)': 'timestamp'}, inplace=True)
@@ -764,6 +773,8 @@ def main() -> None:
 
     print(pd.DataFrame(metrics))
 
+
+def build_a_directed_network_graph() -> None:
     pipes = pd.read_csv('eia_crude_pipelines.csv')
 
     G = nx.DiGraph()
@@ -812,6 +823,8 @@ def main() -> None:
 
     flow = nx.min_cost_flow(G, demand={...}, capacity='capacity')
 
+
+def define_data() -> None:
     crudes = ['A', 'B', 'C']
 
     cost = {'A': 70, 'B': 80, 'C': 65}
@@ -864,6 +877,14 @@ def main() -> None:
     else:
         print('No optimal solution found.')
 
+
+def pip_install_pyomo_jupyter_only() -> None:
+    # !pip install pyomo  # Jupyter-only
+    # !sudo apt-get install glpk  # Jupyter-only
+    pass
+
+
+def notebook_step_009() -> None:
     crudes = ['A', 'B', 'C']
 
     cost = {'A': 70, 'B': 80, 'C': 65}
@@ -915,6 +936,8 @@ def main() -> None:
     else:
         print('No optimal solution found.')
 
+
+def crude_data_for_the_plot() -> None:
     crudes = ['A', 'B', 'C']
 
     api = [34, 40, 30]
@@ -988,6 +1011,19 @@ def main() -> None:
     plt.savefig('blend_volumes.png')
 
     plt.show()
+
+
+def main() -> None:
+    notebook_step_001()
+    load_the_re_uploaded_dataset_skipping_the_first()
+    reload_the_dataset_with_the_correct_header_at_ro()
+    include_exogenous_variables_temperature_humidity()
+    helpers()
+    build_a_directed_network_graph()
+    define_data()
+    pip_install_pyomo_jupyter_only()
+    notebook_step_009()
+    crude_data_for_the_plot()
 
 if __name__ == "__main__":
     main()
