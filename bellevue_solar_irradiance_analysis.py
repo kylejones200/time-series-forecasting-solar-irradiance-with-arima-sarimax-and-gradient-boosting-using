@@ -926,7 +926,7 @@ pipes = pd.read_csv('eia_crude_pipelines.csv')  # includes source, dest, capacit
 
 # Build a directed network graph
 G = nx.DiGraph()
-for _, r in pipes.iterrows():
+for r in pipes.itertuples(index=False):
     G.add_edge(r['origin'], r['destination'], capacity=r['capacity_bpd'])
 
 # 2. Define supply and stock
