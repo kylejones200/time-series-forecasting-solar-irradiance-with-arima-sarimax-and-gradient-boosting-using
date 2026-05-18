@@ -1,6 +1,5 @@
 # Description: Short example for Time Series Forecasting Solar Irradiance with ARIMA SARIMAX and Gradient Boosting Using.
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,7 +31,6 @@ results = pd.DataFrame(
         "sMAPE": [76.40, 85.30, 86.46],
     }
 )
-
 
 signalplot.apply(font_family="serif")
 
@@ -79,15 +77,12 @@ def run_forecasting_pipeline(df, exog_vars, target="GHI", horizon=30):
     idx = np.arange(len(df))
     train_idx, test_idx = list(tscv.split(idx))[-1]
     train, test = df.iloc[train_idx], df.iloc[test_idx]
-
     arima = ARIMA(train[target], order=(1, 1, 1)).fit()
     sarimax = SARIMAX(train[target], exog=train[exog_vars], order=(1, 1, 1)).fit()
     gbt = GradientBoostingRegressor().fit(train[exog_vars], train[target])
-
     arima_forecast = arima.forecast(horizon)
     sarimax_forecast = sarimax.forecast(horizon, exog=test[exog_vars])
     gbt_forecast = gbt.predict(test[exog_vars])
-
     y_true = test[target].values
     mask = y_true != 0
     mape_arima = (
@@ -105,7 +100,6 @@ def run_forecasting_pipeline(df, exog_vars, target="GHI", horizon=30):
         if np.any(mask)
         else np.nan
     )
-
     results = pd.DataFrame(
         {
             "Model": ["ARIMA", "SARIMAX", "GBT"],
@@ -122,7 +116,6 @@ def run_forecasting_pipeline(df, exog_vars, target="GHI", horizon=30):
             ],
         }
     )
-
     forecasts = pd.DataFrame(
         {
             "Actual": y_true,
@@ -132,9 +125,7 @@ def run_forecasting_pipeline(df, exog_vars, target="GHI", horizon=30):
         },
         index=test.index,
     )
-
     return results, forecasts
-
 
 
 def main():
@@ -142,25 +133,20 @@ def main():
     results, forecasts = run_forecasting_pipeline(
         df, exog_vars=["Temperature", "Humidity", "Wind Speed"]
     )
-
     # Plot 90 days of actuals, with forecast beginning at T-30
     lookback = 90
     forecast_horizon = 30
-
     start_idx = -lookback - forecast_horizon
     end_idx = None
-
     # Slice actuals and forecasts
     actuals_full = df["GHI"].resample("D").mean().interpolate("time").dropna()
     actuals = actuals_full.iloc[start_idx:end_idx]
     forecast_start = actuals.index[-forecast_horizon]
-
     plt.figure(figsize=(10, 5))
     plt.plot(actuals.index, actuals.values, label="Actual", lw=1.5, color="black")
     plt.plot(forecasts.index, forecasts["ARIMA"], label="ARIMA", ls="--")
     plt.plot(forecasts.index, forecasts["SARIMAX"], label="SARIMAX", ls=":")
     plt.plot(forecasts.index, forecasts["GBT"], label="GBT", ls="-.")
-
     # Mark forecast start
     plt.axvline(forecast_start, color="gray", linestyle="--", lw=1)
     plt.text(
@@ -171,17 +157,14 @@ def main():
         va="top",
         fontsize=9,
     )
-
     # Style
     plt.xlabel("Date")
     plt.ylabel("GHI")
     plt.legend(frameon=False)
     plt.title("GHI Forecast: Last 90 Days with 30-Day Forecast")
-
     ax = plt.gca()
     ax.spines["left"].set_position(("outward", 5))
     ax.spines["bottom"].set_position(("outward", 5))
-
     plt.tight_layout()
     plt.savefig("forecast_with_history_minimalist.png", dpi=300)
     plt.show()

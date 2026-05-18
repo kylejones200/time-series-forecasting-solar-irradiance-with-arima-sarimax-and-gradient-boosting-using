@@ -1,31 +1,26 @@
 """Auto-split from legacy monolithic script."""
 
-from scipy.optimize import linprog
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from torch.utils.data import DataLoader, TensorDataset
-import matplotlib.pyplot as plt
-import networkx as nx
-import numpy as np
-import pandas as pd
-import pyomo.environ as pyo
-import torch
-import torch.nn as nn
+
 
 def include_exogenous_variables_temperature_humidity() -> None:
-    from statsmodels.tsa.statespace.sarimax import SARIMAX
-
     # Include exogenous variables: temperature, humidity, and wind speed
     exog_vars = ["Temperature", "Humidity", "Wind Speed"]
-    df_exog = df_selected_named[exog_vars].resample("D").mean().interpolate(method="time")
-
+    df_exog = (
+        df_selected_named[exog_vars].resample("D").mean().interpolate(method="time")
+    )
     # Align GHI and exogenous variables
     ghi_daily = ghi_daily.loc[df_exog.index]
-    ghi_filled = ghi_daily.interpolate(method='time')
-
+    ghi_filled = ghi_daily.interpolate(method="time")
     # Fit SARIMAX with seasonal order (1,1,1,7) for weekly pattern
     sarimax_model = SARIMAX(
         ghi_filled,
@@ -33,18 +28,17 @@ def include_exogenous_variables_temperature_humidity() -> None:
         order=(1, 1, 1),
         seasonal_order=(1, 1, 1, 7),
         enforce_stationarity=False,
-        enforce_invertibility=False
+        enforce_invertibility=False,
     )
     sarimax_fit = sarimax_model.fit(disp=False)
-
     # Forecast next 30 days with exogenous values extended
     exog_forecast = df_exog[-7:].copy()
     exog_future = pd.concat([exog_forecast] * 5).reset_index(drop=True)
-    exog_future.index = pd.date_range(start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30)
-
+    exog_future.index = pd.date_range(
+        start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30
+    )
     # Forecast with SARIMAX
     sarimax_forecast = sarimax_fit.forecast(steps=30, exog=exog_future)
-
     # Plot forecast
     plt.figure(figsize=(10, 5))
     plt.plot(ghi_filled[-90:], label="Observed (last 90 days)")
@@ -54,19 +48,17 @@ def include_exogenous_variables_temperature_humidity() -> None:
     plt.ylabel("Global Horizontal Irradiance (W/m²)")
     plt.legend()
     plt.grid(True)
-
     # Save and show
     plt.savefig("ghi_sarimax_forecast.png", dpi=300, bbox_inches="tight")
     plt.show()
 
-
     # Fix exog_future length to match 30-day forecast exactly
     exog_future = pd.concat([exog_forecast] * 5, ignore_index=True).iloc[:30]
-    exog_future.index = pd.date_range(start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30)
-
+    exog_future.index = pd.date_range(
+        start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30
+    )
     # Forecast with SARIMAX
     sarimax_forecast = sarimax_fit.forecast(steps=30, exog=exog_future)
-
     # Plot forecast
     plt.figure(figsize=(10, 5))
     plt.plot(ghi_filled[-90:], label="Observed (last 90 days)")
@@ -76,23 +68,20 @@ def include_exogenous_variables_temperature_humidity() -> None:
     plt.ylabel("Global Horizontal Irradiance (W/m²)")
     plt.legend()
     plt.grid(True)
-
     # Save and show
     plt.savefig("ghi_sarimax_forecast_fixed.png", dpi=300, bbox_inches="tight")
     plt.show()
-
-
 
     from statsmodels.tsa.statespace.sarimax import SARIMAX
 
     # Include exogenous variables: temperature, humidity, and wind speed
     exog_vars = ["Temperature", "Humidity", "Wind Speed"]
-    df_exog = df_selected_named[exog_vars].resample("D").mean().interpolate(method="time")
-
+    df_exog = (
+        df_selected_named[exog_vars].resample("D").mean().interpolate(method="time")
+    )
     # Align GHI and exogenous variables
     ghi_daily = ghi_daily.loc[df_exog.index]
-    ghi_filled = ghi_daily.interpolate(method='time')
-
+    ghi_filled = ghi_daily.interpolate(method="time")
     # Fit SARIMAX with seasonal order (1,1,1,7) for weekly pattern
     sarimax_model = SARIMAX(
         ghi_filled,
@@ -100,18 +89,17 @@ def include_exogenous_variables_temperature_humidity() -> None:
         order=(1, 1, 1),
         seasonal_order=(1, 1, 1, 7),
         enforce_stationarity=False,
-        enforce_invertibility=False
+        enforce_invertibility=False,
     )
     sarimax_fit = sarimax_model.fit(disp=False)
-
     # Forecast next 30 days with exogenous values extended
     exog_forecast = df_exog[-7:].copy()
     exog_future = pd.concat([exog_forecast] * 5).reset_index(drop=True)
-    exog_future.index = pd.date_range(start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30)
-
+    exog_future.index = pd.date_range(
+        start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30
+    )
     # Forecast with SARIMAX
     sarimax_forecast = sarimax_fit.forecast(steps=30, exog=exog_future)
-
     # Plot forecast
     plt.figure(figsize=(10, 5))
     plt.plot(ghi_filled[-90:], label="Observed (last 90 days)")
@@ -121,19 +109,17 @@ def include_exogenous_variables_temperature_humidity() -> None:
     plt.ylabel("Global Horizontal Irradiance (W/m²)")
     plt.legend()
     plt.grid(True)
-
     # Save and show
     plt.savefig("ghi_sarimax_forecast.png", dpi=300, bbox_inches="tight")
     plt.show()
 
-
     # Fix exog_future length to match 30-day forecast exactly
     exog_future = pd.concat([exog_forecast] * 5, ignore_index=True).iloc[:30]
-    exog_future.index = pd.date_range(start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30)
-
+    exog_future.index = pd.date_range(
+        start=ghi_filled.index[-1] + pd.Timedelta(days=1), periods=30
+    )
     # Forecast with SARIMAX
     sarimax_forecast = sarimax_fit.forecast(steps=30, exog=exog_future)
-
     # Plot forecast
     plt.figure(figsize=(10, 5))
     plt.plot(ghi_filled[-90:], label="Observed (last 90 days)")
@@ -143,52 +129,39 @@ def include_exogenous_variables_temperature_humidity() -> None:
     plt.ylabel("Global Horizontal Irradiance (W/m²)")
     plt.legend()
     plt.grid(True)
-
     # Save and show
     plt.savefig("ghi_sarimax_forecast_fixed.png", dpi=300, bbox_inches="tight")
     plt.show()
 
-
-    from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error
-    import torch
-    import torch.nn as nn
-    from torch.utils.data import DataLoader, TensorDataset
-    import numpy as np
 
     # Prepare supervised learning features
     data = df_selected_named[["GHI", "Temperature", "Humidity", "Wind Speed"]].dropna()
     data["GHI_t+1"] = data["GHI"].shift(-1)
     data.dropna(inplace=True)
-
     # Split features and target
     X = data[["GHI", "Temperature", "Humidity", "Wind Speed"]].values
     y = data["GHI_t+1"].values
-
     # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, shuffle=False
+    )
     # Fit Gradient Boosting Regressor
     bgt_model = GradientBoostingRegressor()
     bgt_model.fit(X_train, y_train)
     bgt_preds = bgt_model.predict(X_test)
     bgt_rmse = mean_squared_error(y_test, bgt_preds, squared=False)
-
     # Prepare data for LSTM: [samples, time steps, features]
     X_lstm = np.expand_dims(X, axis=1)
     y_lstm = y
-
     # Split for PyTorch
-    X_train_lstm, X_test_lstm = X_lstm[:len(X_train)], X_lstm[len(X_train):]
-    y_train_lstm, y_test_lstm = y_lstm[:len(X_train)], y_lstm[len(X_train):]
-
+    X_train_lstm, X_test_lstm = X_lstm[: len(X_train)], X_lstm[len(X_train) :]
+    y_train_lstm, y_test_lstm = y_lstm[: len(X_train)], y_lstm[len(X_train) :]
     # Convert to tensors
     X_train_tensor = torch.tensor(X_train_lstm, dtype=torch.float32)
     y_train_tensor = torch.tensor(y_train_lstm, dtype=torch.float32)
     X_test_tensor = torch.tensor(X_test_lstm, dtype=torch.float32)
     y_test_tensor = torch.tensor(y_test_lstm, dtype=torch.float32)
-
     train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=False)
 
@@ -207,7 +180,6 @@ def include_exogenous_variables_temperature_humidity() -> None:
     lstm_model = LSTMModel(input_size=4)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(lstm_model.parameters(), lr=0.001)
-
     # Train the LSTM
     for epoch in range(20):
         lstm_model.train()
@@ -223,54 +195,53 @@ def include_exogenous_variables_temperature_humidity() -> None:
     with torch.no_grad():
         lstm_preds = lstm_model(X_test_tensor).numpy()
     lstm_rmse = mean_squared_error(y_test_tensor.numpy(), lstm_preds, squared=False)
-
     (bgt_rmse, lstm_rmse)
 
-
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
     import numpy as np
+    from sklearn.metrics import mean_squared_error
 
     def smape(y_true, y_pred):
-        return 100 * np.mean(2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred)))
+        return 100 * np.mean(
+            2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+        )
 
     # Prepare pipeline
     def run_forecasting_pipeline(data, exog_vars, target="GHI", forecast_horizon=30):
         # Step 1: Clean and prepare
         data = data[[target] + exog_vars].dropna()
         data = data.resample("D").mean().interpolate(method="time")
-
         # Step 2: Define train/test split
         train = data.iloc[:-forecast_horizon]
         test = data.iloc[-forecast_horizon:]
-
         # Step 3: ARIMA baseline (no exog)
         from statsmodels.tsa.arima.model import ARIMA
+
         arima_model = ARIMA(train[target], order=(1, 1, 1)).fit()
         arima_pred = arima_model.forecast(steps=forecast_horizon)
-
         # Step 4: SARIMAX with exogenous
         from statsmodels.tsa.statespace.sarimax import SARIMAX
+
         sarimax_model = SARIMAX(
             train[target],
             exog=train[exog_vars],
             order=(1, 1, 1),
             seasonal_order=(1, 1, 1, 7),
             enforce_stationarity=False,
-            enforce_invertibility=False
+            enforce_invertibility=False,
         ).fit(disp=False)
-        sarimax_pred = sarimax_model.forecast(steps=forecast_horizon, exog=test[exog_vars])
-
+        sarimax_pred = sarimax_model.forecast(
+            steps=forecast_horizon, exog=test[exog_vars]
+        )
         # Step 5: Gradient Boosted Trees
         from sklearn.ensemble import GradientBoostingRegressor
+
         X_train = train[[target] + exog_vars].values
         y_train = train[target].shift(-1).dropna().values
         X_train = X_train[:-1]
         gbt_model = GradientBoostingRegressor().fit(X_train, y_train)
-
         # Build features for prediction
         X_test = test[[target] + exog_vars].values
         gbt_pred = gbt_model.predict(X_test)
-
         # Step 6: Evaluate metrics
         y_true = test[target].values
         metrics = {
@@ -291,39 +262,38 @@ def include_exogenous_variables_temperature_humidity() -> None:
                 smape(y_true, gbt_pred),
             ],
         }
-
-        forecast_df = pd.DataFrame({
-            "timestamp": test.index,
-            "actual": y_true,
-            "ARIMA": arima_pred,
-            "SARIMAX": sarimax_pred,
-            "GBT": gbt_pred,
-        })
-
+        forecast_df = pd.DataFrame(
+            {
+                "timestamp": test.index,
+                "actual": y_true,
+                "ARIMA": arima_pred,
+                "SARIMAX": sarimax_pred,
+                "GBT": gbt_pred,
+            }
+        )
         return pd.DataFrame(metrics), forecast_df
 
     # Run pipeline
     exog_columns = ["Temperature", "Humidity", "Wind Speed"]
-    metrics_df, full_forecast_df = run_forecasting_pipeline(df_selected_named, exog_columns)
-
+    metrics_df, full_forecast_df = run_forecasting_pipeline(
+        df_selected_named, exog_columns
+    )
     # Re-import necessary modules after code execution state reset
     import pandas as pd
-    import numpy as np
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
 
     # Re-define sMAPE
     def smape(y_true, y_pred):
-        return 100 * np.mean(2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred)))
+        return 100 * np.mean(
+            2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+        )
 
     # Re-load uploaded data
     file_path = "/mnt/data/Bellevue SolarAnywhere Time Series 20230101 to 20240101 Lat_47_615 Lon_-122_175 SA format.csv"
-    df = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
-
+    df = pd.read_csv(file_path, encoding="ISO-8859-1", skiprows=1)
     # Rename and parse timestamp
     df.rename(columns={"ObservationTime(LST)": "timestamp"}, inplace=True)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors='coerce')
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df.set_index("timestamp", inplace=True)
-
     # Define column mapping
     column_mapping = {
         "Global Horizontal Irradiance (GHI) W/m2": "GHI",
@@ -338,45 +308,42 @@ def include_exogenous_variables_temperature_humidity() -> None:
         "Snow Depth (m)": "Snow Depth",
         "Albedo": "Albedo",
         "Particulate Matter 10 (µg/m3)": "PM10",
-        "Particulate Matter 2.5 (µg/m3)": "PM2.5"
+        "Particulate Matter 2.5 (µg/m3)": "PM2.5",
     }
-
     # Filter and rename columns
     df = df[list(column_mapping.keys())].copy()
     df.rename(columns=column_mapping, inplace=True)
-    df = df.apply(pd.to_numeric, errors='coerce')
+    df = df.apply(pd.to_numeric, errors="coerce")
 
     # Define forecasting pipeline
     def run_forecasting_pipeline(data, exog_vars, target="GHI", forecast_horizon=30):
+        from sklearn.ensemble import GradientBoostingRegressor
         from statsmodels.tsa.arima.model import ARIMA
         from statsmodels.tsa.statespace.sarimax import SARIMAX
-        from sklearn.ensemble import GradientBoostingRegressor
 
         data = data[[target] + exog_vars].dropna()
         data = data.resample("D").mean().interpolate(method="time")
         train = data.iloc[:-forecast_horizon]
         test = data.iloc[-forecast_horizon:]
-
         arima_model = ARIMA(train[target], order=(1, 1, 1)).fit()
         arima_pred = arima_model.forecast(steps=forecast_horizon)
-
         sarimax_model = SARIMAX(
             train[target],
             exog=train[exog_vars],
             order=(1, 1, 1),
             seasonal_order=(1, 1, 1, 7),
             enforce_stationarity=False,
-            enforce_invertibility=False
+            enforce_invertibility=False,
         ).fit(disp=False)
-        sarimax_pred = sarimax_model.forecast(steps=forecast_horizon, exog=test[exog_vars])
-
+        sarimax_pred = sarimax_model.forecast(
+            steps=forecast_horizon, exog=test[exog_vars]
+        )
         X_train = train[[target] + exog_vars].values
         y_train = train[target].shift(-1).dropna().values
         X_train = X_train[:-1]
         gbt_model = GradientBoostingRegressor().fit(X_train, y_train)
         X_test = test[[target] + exog_vars].values
         gbt_pred = gbt_model.predict(X_test)
-
         y_true = test[target].values
         metrics = {
             "Model": ["ARIMA", "SARIMAX", "GBT"],
@@ -396,31 +363,28 @@ def include_exogenous_variables_temperature_humidity() -> None:
                 smape(y_true, gbt_pred),
             ],
         }
-
-        forecast_df = pd.DataFrame({
-            "timestamp": test.index,
-            "actual": y_true,
-            "ARIMA": arima_pred,
-            "SARIMAX": sarimax_pred,
-            "GBT": gbt_pred,
-        })
-
+        forecast_df = pd.DataFrame(
+            {
+                "timestamp": test.index,
+                "actual": y_true,
+                "ARIMA": arima_pred,
+                "SARIMAX": sarimax_pred,
+                "GBT": gbt_pred,
+            }
+        )
         return pd.DataFrame(metrics), forecast_df
 
     # Run pipeline again
     exog_columns = ["Temperature", "Humidity", "Wind Speed"]
     metrics_df, full_forecast_df = run_forecasting_pipeline(df, exog_columns)
 
-
     # Load the re-uploaded dataset, skipping the first row
     file_path = "Bellevue SolarAnywhere Time Series 20230101 to 20240101 Lat_47_615 Lon_-122_175 SA format.csv"
-    df = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
-
+    df = pd.read_csv(file_path, encoding="ISO-8859-1", skiprows=1)
     # Rename and parse timestamp
     df.rename(columns={"ObservationTime(LST)": "timestamp"}, inplace=True)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors='coerce')
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df.set_index("timestamp", inplace=True)
-
     # Define column mapping
     column_mapping = {
         "Global Horizontal Irradiance (GHI) W/m2": "GHI",
@@ -435,50 +399,45 @@ def include_exogenous_variables_temperature_humidity() -> None:
         "Snow Depth (m)": "Snow Depth",
         "Albedo": "Albedo",
         "Particulate Matter 10 (µg/m3)": "PM10",
-        "Particulate Matter 2.5 (µg/m3)": "PM2.5"
+        "Particulate Matter 2.5 (µg/m3)": "PM2.5",
     }
-
     # Filter and rename columns
     df = df[list(column_mapping.keys())].copy()
     df.rename(columns=column_mapping, inplace=True)
-    df = df.apply(pd.to_numeric, errors='coerce')
-
+    df = df.apply(pd.to_numeric, errors="coerce")
     # Define forecasting pipeline again
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
-    from statsmodels.tsa.arima.model import ARIMA
-    from statsmodels.tsa.statespace.sarimax import SARIMAX
     from sklearn.ensemble import GradientBoostingRegressor
-    import numpy as np
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
 
     def smape(y_true, y_pred):
-        return 100 * np.mean(2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred)))
+        return 100 * np.mean(
+            2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+        )
 
     def run_forecasting_pipeline(data, exog_vars, target="GHI", forecast_horizon=30):
         data = data[[target] + exog_vars].dropna()
         data = data.resample("D").mean().interpolate(method="time")
         train = data.iloc[:-forecast_horizon]
         test = data.iloc[-forecast_horizon:]
-
         arima_model = ARIMA(train[target], order=(1, 1, 1)).fit()
         arima_pred = arima_model.forecast(steps=forecast_horizon)
-
         sarimax_model = SARIMAX(
             train[target],
             exog=train[exog_vars],
             order=(1, 1, 1),
             seasonal_order=(1, 1, 1, 7),
             enforce_stationarity=False,
-            enforce_invertibility=False
+            enforce_invertibility=False,
         ).fit(disp=False)
-        sarimax_pred = sarimax_model.forecast(steps=forecast_horizon, exog=test[exog_vars])
-
+        sarimax_pred = sarimax_model.forecast(
+            steps=forecast_horizon, exog=test[exog_vars]
+        )
         X_train = train[[target] + exog_vars].values
         y_train = train[target].shift(-1).dropna().values
         X_train = X_train[:-1]
         gbt_model = GradientBoostingRegressor().fit(X_train, y_train)
         X_test = test[[target] + exog_vars].values
         gbt_pred = gbt_model.predict(X_test)
-
         y_true = test[target].values
         metrics = {
             "Model": ["ARIMA", "SARIMAX", "GBT"],
@@ -498,43 +457,37 @@ def include_exogenous_variables_temperature_humidity() -> None:
                 smape(y_true, gbt_pred),
             ],
         }
-
-        forecast_df = pd.DataFrame({
-            "timestamp": test.index,
-            "actual": y_true,
-            "ARIMA": arima_pred,
-            "SARIMAX": sarimax_pred,
-            "GBT": gbt_pred,
-        })
-
+        forecast_df = pd.DataFrame(
+            {
+                "timestamp": test.index,
+                "actual": y_true,
+                "ARIMA": arima_pred,
+                "SARIMAX": sarimax_pred,
+                "GBT": gbt_pred,
+            }
+        )
         return pd.DataFrame(metrics), forecast_df
 
     # Run pipeline again
     exog_columns = ["Temperature", "Humidity", "Wind Speed"]
     metrics_df, full_forecast_df = run_forecasting_pipeline(df, exog_columns)
 
-
     import pandas as pd
-    import numpy as np
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
-    from statsmodels.tsa.arima.model import ARIMA
     from statsmodels.tsa.statespace.sarimax import SARIMAX
-    from sklearn.ensemble import GradientBoostingRegressor
-    import matplotlib.pyplot as plt
 
     # --- Utility ---
     def smape(y_true, y_pred):
-        return 100 * np.mean(2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred)))
+        return 100 * np.mean(
+            2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+        )
 
     # --- Load Data ---
     file_path = "Bellevue SolarAnywhere Time Series 20230101 to 20240101 Lat_47_615 Lon_-122_175 SA format.csv"
-    df = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
-
+    df = pd.read_csv(file_path, encoding="ISO-8859-1", skiprows=1)
     # Parse timestamp
     df.rename(columns={"ObservationTime(LST)": "timestamp"}, inplace=True)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors='coerce')
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df.set_index("timestamp", inplace=True)
-
     # Rename key columns
     column_mapping = {
         "Global Horizontal Irradiance (GHI) W/m2": "GHI",
@@ -549,11 +502,11 @@ def include_exogenous_variables_temperature_humidity() -> None:
         "Snow Depth (m)": "Snow Depth",
         "Albedo": "Albedo",
         "Particulate Matter 10 (µg/m3)": "PM10",
-        "Particulate Matter 2.5 (µg/m3)": "PM2.5"
+        "Particulate Matter 2.5 (µg/m3)": "PM2.5",
     }
     df = df[list(column_mapping.keys())].copy()
     df.rename(columns=column_mapping, inplace=True)
-    df = df.apply(pd.to_numeric, errors='coerce')
+    df = df.apply(pd.to_numeric, errors="coerce")
 
     # --- Forecasting Pipeline ---
     def run_forecasting_pipeline(data, exog_vars, target="GHI", forecast_horizon=30):
@@ -561,11 +514,9 @@ def include_exogenous_variables_temperature_humidity() -> None:
         data = data.resample("D").mean().interpolate(method="time")
         train = data.iloc[:-forecast_horizon]
         test = data.iloc[-forecast_horizon:]
-
         # ARIMA
         arima_model = ARIMA(train[target], order=(1, 1, 1)).fit()
         arima_pred = arima_model.forecast(steps=forecast_horizon)
-
         # SARIMAX
         sarimax_model = SARIMAX(
             train[target],
@@ -573,10 +524,11 @@ def include_exogenous_variables_temperature_humidity() -> None:
             order=(1, 1, 1),
             seasonal_order=(1, 1, 1, 7),
             enforce_stationarity=False,
-            enforce_invertibility=False
+            enforce_invertibility=False,
         ).fit(disp=False)
-        sarimax_pred = sarimax_model.forecast(steps=forecast_horizon, exog=test[exog_vars])
-
+        sarimax_pred = sarimax_model.forecast(
+            steps=forecast_horizon, exog=test[exog_vars]
+        )
         # GBT
         X_train = train[[target] + exog_vars].values
         y_train = train[target].shift(-1).dropna().values
@@ -584,7 +536,6 @@ def include_exogenous_variables_temperature_humidity() -> None:
         gbt_model = GradientBoostingRegressor().fit(X_train, y_train)
         X_test = test[[target] + exog_vars].values
         gbt_pred = gbt_model.predict(X_test)
-
         # Evaluation
         y_true = test[target].values
         metrics = {
@@ -605,29 +556,25 @@ def include_exogenous_variables_temperature_humidity() -> None:
                 smape(y_true, gbt_pred),
             ],
         }
-
-        forecast_df = pd.DataFrame({
-            "timestamp": test.index,
-            "actual": y_true,
-            "ARIMA": arima_pred,
-            "SARIMAX": sarimax_pred,
-            "GBT": gbt_pred,
-        })
-
+        forecast_df = pd.DataFrame(
+            {
+                "timestamp": test.index,
+                "actual": y_true,
+                "ARIMA": arima_pred,
+                "SARIMAX": sarimax_pred,
+                "GBT": gbt_pred,
+            }
+        )
         return pd.DataFrame(metrics), forecast_df
 
     # --- Run Forecast ---
     exog_columns = ["Temperature", "Humidity", "Wind Speed"]
     metrics_df, forecast_df = run_forecasting_pipeline(df, exog_columns)
-
     # --- Display ---
     print("\n--- Metrics ---")
     print(metrics_df)
-
     print("\n--- Forecast (tail) ---")
     print(forecast_df.tail())
-
     # Optional: save forecast to CSV
     forecast_df.to_csv("solar_forecast_results.csv", index=False)
     metrics_df.to_csv("solar_model_metrics.csv", index=False)
-
