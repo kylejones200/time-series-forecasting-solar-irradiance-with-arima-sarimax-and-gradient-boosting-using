@@ -11,14 +11,7 @@ Short-term solar irradiance forecasting plays a central role in energy system op
 
 The data comes from SolarAnywhere®, a service provided by Clean Power Research®, which delivers satellite-based estimates of solar irradiance and meteorological conditions. The dataset covers Bellevue, Washington, from January 1, 2023, to January 1, 2024, at hourly resolution. Variables include:
 
-## About
 
-Place the code for this article in this repository.
-The original article export is saved as `article.md`.
-
-## Files
-
-Add your `.ipynb`, `.py`, `.yaml`, `.js`, `.ts`, or other project files here.
 
 ## Disclaimer
 
